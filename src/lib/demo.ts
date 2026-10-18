@@ -69,8 +69,8 @@ export function generarDemo(
     if (r() < 0.12) {
       agregar({ tipo: 'ingreso', monto: Math.round((2500 + r() * 4500) * 100), categoriaId: porNombre.get('Guardias y extras') ?? null, nota: 'Guardia' });
     }
-    if (dia === 5) {
-      agregar({ tipo: 'transferencia', monto: 200000, cuentaId: debito, cuentaDestinoId: efectivo, nota: 'Retiro cajero' });
+    if (dia === 5 || dia === 20) {
+      agregar({ tipo: 'transferencia', monto: 250000, cuentaId: debito, cuentaDestinoId: efectivo, nota: 'Retiro cajero' });
     }
     for (const p of PATRONES) {
       const prob = p.porSemana / 7;
@@ -81,7 +81,7 @@ export function generarDemo(
           tipo: 'gasto',
           monto: Math.round(pesos) * 100 + (r() < 0.3 ? Math.round(r() * 99) : 0),
           categoriaId: porNombre.get(p.categoria) ?? null,
-          cuentaId: r() < 0.35 ? efectivo : debito,
+          cuentaId: r() < 0.2 ? efectivo : debito,
           nota: p.notas[Math.floor(r() * p.notas.length)],
         });
       }

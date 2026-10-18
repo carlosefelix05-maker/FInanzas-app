@@ -5,8 +5,9 @@ import { formatearMonto } from '../lib/dinero';
 import { etiquetaPeriodo, hoyISO, rangoPeriodo } from '../lib/fechas';
 import { calcularSaldos, calcularTotales, compararMovimientos, filtrarPorRango } from '../lib/movimientos';
 import { ListaMovimientos } from '../components/ListaMovimientos';
+import type { Pantalla } from '../App';
 
-export function Inicio({ irA }: { irA: (tab: 'movimientos') => void }) {
+export function Inicio({ irA }: { irA: (p: Pantalla) => void }) {
   const movimientos = useMovimientos();
   const cuentas = useCuentas();
   const hoy = hoyISO();
@@ -48,7 +49,12 @@ export function Inicio({ irA }: { irA: (tab: 'movimientos') => void }) {
       </section>
 
       <section className="tarjeta">
-        <h2>Cuentas</h2>
+        <div className="tarjeta-titulo">
+          <h2>Cuentas</h2>
+          <button className="enlace" onClick={() => irA('cuentas')}>
+            Administrar <ChevronRight size={16} color="var(--naranja)" />
+          </button>
+        </div>
         <ul className="lista-cuentas">
           {activas.map((c) => {
             const s = saldos.get(c.id!) ?? 0;

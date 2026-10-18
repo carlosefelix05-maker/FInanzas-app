@@ -33,3 +33,16 @@ describe('etiquetas', () => {
     expect(etiquetaDia('2026-10-13', '2026-10-18')).toBe('Martes 13 de octubre');
   });
 });
+
+import { rangoAnteriorComparable } from './fechas';
+describe('rangoAnteriorComparable', () => {
+  it('recorta el periodo anterior cuando el actual está en curso', () => {
+    expect(rangoAnteriorComparable('mes', '2026-10-18', '2026-10-18')).toEqual({ inicio: '2026-09-01', fin: '2026-09-18', recortado: true });
+    expect(rangoAnteriorComparable('mes', '2026-03-31', '2026-03-31')).toEqual({ inicio: '2026-02-01', fin: '2026-02-28', recortado: false });
+    expect(rangoAnteriorComparable('semana', '2026-10-14', '2026-10-14')).toEqual({ inicio: '2026-10-05', fin: '2026-10-07', recortado: true });
+    expect(rangoAnteriorComparable('anio', '2026-10-18', '2026-10-18').fin).toBe('2025-10-18');
+  });
+  it('no recorta periodos pasados', () => {
+    expect(rangoAnteriorComparable('mes', '2026-08-10', '2026-10-18')).toEqual({ inicio: '2026-07-01', fin: '2026-07-31', recortado: false });
+  });
+});

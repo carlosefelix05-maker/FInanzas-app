@@ -7,6 +7,8 @@ import { Inicio } from './screens/Inicio';
 import { Movimientos } from './screens/Movimientos';
 import { Ajustes } from './screens/Ajustes';
 import { Proximamente } from './screens/Proximamente';
+import { Categorias } from './screens/Categorias';
+import { Cuentas } from './screens/Cuentas';
 
 const TABS = [
   { id: 'inicio', etiqueta: 'Inicio', Icono: House },
@@ -16,8 +18,9 @@ const TABS = [
   { id: 'metas', etiqueta: 'Metas', Icono: Target },
 ] as const;
 
-type Pantalla = (typeof TABS)[number]['id'] | 'ajustes';
-const PANTALLAS: Pantalla[] = [...TABS.map((t) => t.id), 'ajustes'];
+export type Pantalla = (typeof TABS)[number]['id'] | 'ajustes' | 'categorias' | 'cuentas';
+const SECUNDARIAS: Pantalla[] = ['ajustes', 'categorias', 'cuentas'];
+const PANTALLAS: Pantalla[] = [...TABS.map((t) => t.id), ...SECUNDARIAS];
 
 function leerHash(): Pantalla {
   const h = window.location.hash.replace(/^#\/?/, '') as Pantalla;
@@ -31,6 +34,8 @@ const TITULOS: Record<Pantalla, string> = {
   tarjetas: 'Tarjetas',
   metas: 'Metas',
   ajustes: 'Ajustes',
+  categorias: 'Categorías',
+  cuentas: 'Cuentas',
 };
 
 export default function App() {
@@ -70,13 +75,17 @@ function Estructura() {
     <div className="app">
       <header className="header">
         <div className="header-fila">
-          {pantalla === 'ajustes' && (
-            <button className="btn-icono" aria-label="Regresar" onClick={() => history.back()}>
+          {SECUNDARIAS.includes(pantalla) && (
+            <button
+              className="btn-icono"
+              aria-label="Regresar"
+              onClick={() => (history.length > 1 ? history.back() : irA(pantalla === 'ajustes' ? 'inicio' : 'ajustes'))}
+            >
               <ArrowLeft size={22} />
             </button>
           )}
           <h1>{TITULOS[pantalla]}</h1>
-          {pantalla !== 'ajustes' && (
+          {!SECUNDARIAS.includes(pantalla) && (
             <button className="btn-icono" aria-label="Ajustes" onClick={() => irA('ajustes')}>
               <Settings size={22} strokeWidth={1.75} />
             </button>
@@ -91,7 +100,9 @@ function Estructura() {
           {pantalla === 'analisis' && <Proximamente Icono={ChartPie} texto="Gráficas y análisis" fase={6} />}
           {pantalla === 'tarjetas' && <Proximamente Icono={CreditCard} texto="Tarjetas de crédito y MSI" fase={4} />}
           {pantalla === 'metas' && <Proximamente Icono={Target} texto="Metas de ahorro" fase={5} />}
-          {pantalla === 'ajustes' && <Ajustes />}
+          {pantalla === 'ajustes' && <Ajustes irA={irA} />}
+          {pantalla === 'categorias' && <Categorias />}
+          {pantalla === 'cuentas' && <Cuentas />}
         </main>
       </ScrollCtx.Provider>
 

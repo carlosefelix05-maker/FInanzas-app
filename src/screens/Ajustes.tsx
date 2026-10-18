@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Database, HardDrive } from 'lucide-react';
+import { ChevronRight, Database, HardDrive, Tags, Wallet } from 'lucide-react';
+import type { Pantalla } from '../App';
 import { useAviso } from '../components/Toast';
 import { borrarDatosDemo, cargarDatosDemo, contarDatosDemo } from '../db/acciones';
 import { solicitarPersistencia } from '../db/db';
 
-export function Ajustes() {
+export function Ajustes({ irA }: { irA: (p: Pantalla) => void }) {
   const avisar = useAviso();
   const [demo, setDemo] = useState<number | null>(null);
   const [persistente, setPersistente] = useState<boolean | null>(null);
@@ -35,6 +36,15 @@ export function Ajustes() {
 
   return (
     <>
+      <nav className="tarjeta lista-enlaces" aria-label="Catálogos">
+        <button className="enlace-fila" onClick={() => irA('categorias')}>
+          <Tags size={20} aria-hidden="true" /> <span>Categorías</span> <ChevronRight size={18} color="var(--naranja)" aria-hidden="true" />
+        </button>
+        <button className="enlace-fila" onClick={() => irA('cuentas')}>
+          <Wallet size={20} aria-hidden="true" /> <span>Cuentas</span> <ChevronRight size={18} color="var(--naranja)" aria-hidden="true" />
+        </button>
+      </nav>
+
       <section className="tarjeta">
         <h2><Database size={18} aria-hidden="true" style={{ verticalAlign: '-3px', marginRight: 6 }} />Datos de ejemplo</h2>
         <p className="texto-ayuda">

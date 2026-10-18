@@ -80,3 +80,16 @@ export function textoTecladoVisible(texto: string): string {
   const conComas = parseInt(entero || '0', 10).toLocaleString('es-MX');
   return decimal !== undefined ? `$${conComas}.${decimal}` : `$${conComas}`;
 }
+
+/**
+ * Limpia lo que el usuario escribe en un campo de monto ("1,250.5", "$300", "12,5")
+ * y devuelve el texto normalizado que entiende textoACentavos.
+ * Las comas se toman como separador de miles salvo que sean el único separador con 1–2 decimales.
+ */
+export function limpiarTextoMonto(entrada: string): string {
+  let s = entrada.replace(/[^\d.,]/g, '');
+  if (!s.includes('.') && /,\d{1,2}$/.test(s) && (s.match(/,/g) ?? []).length === 1) s = s.replace(',', '.');
+  s = s.replace(/,/g, '');
+  const [entero, ...resto] = s.split('.');
+  return resto.length ? `${entero}.${resto.join('').slice(0, 2)}` : entero;
+}

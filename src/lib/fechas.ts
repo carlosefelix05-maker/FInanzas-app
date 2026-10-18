@@ -121,3 +121,17 @@ export function etiquetaFechaCorta(iso: string, hoy: string = hoyISO()): string 
 export function nombreMes(iso: string): string {
   return format(deISO(iso), 'MMMM', { locale: es });
 }
+
+/**
+ * Rango del periodo anterior comparable con el actual.
+ * Si el periodo actual está en curso, recorta el anterior al mismo avance
+ * (p. ej. 1–18 oct se compara con 1–18 sep), para no comparar un mes a medias con uno completo.
+ */
+export function rangoAnteriorComparable(tipo: TipoPeriodo, ref: string, hoy: string): Rango & { recortado: boolean } {
+  const actual = rangoPeriodo(tipo, ref);
+  const anterior = rangoPeriodo(tipo, desplazarPeriodo(tipo, ref, -1));
+  if (hoy < actual.inicio || hoy > actual.fin || tipo === 'dia') return { ...anterior, recortado: false };
+  const finRecortado = desplazarPeriodo(tipo, hoy, -1);
+  const fin = finRecortado < anterior.fin ? finRecortado : anterior.fin;
+  return { inicio: anterior.inicio, fin, recortado: fin < anterior.fin };
+}

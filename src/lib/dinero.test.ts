@@ -43,3 +43,14 @@ describe('aplicarTecla', () => {
     expect(textoTecladoVisible('1234.5')).toBe('$1,234.5');
   });
 });
+
+import { limpiarTextoMonto } from './dinero';
+describe('limpiarTextoMonto', () => {
+  it('acepta formatos comunes', () => {
+    expect(textoACentavos(limpiarTextoMonto('$1,250.50'))).toBe(125050);
+    expect(textoACentavos(limpiarTextoMonto('12,5'))).toBe(1250);
+    expect(textoACentavos(limpiarTextoMonto('1,000'))).toBe(100000);
+    expect(textoACentavos(limpiarTextoMonto('3.456'))).toBe(345);
+    expect(limpiarTextoMonto('abc')).toBe('');
+  });
+});
