@@ -78,7 +78,7 @@ export function Inicio({ irA }: { irA: (p: Pantalla) => void }) {
         <section className="tarjeta tarjeta-alerta">
           <p className="alerta-linea">
             <Smartphone size={20} className="icono-alerta" aria-hidden="true" />
-            <span>Instala la app: en Safari toca <strong>Compartir → Agregar a inicio</strong>. Así iOS no borra tus datos.</span>
+            <span>Instala la app: toca <strong>Compartir → Agregar a pantalla de inicio</strong>. Así iOS no borra tus datos.</span>
           </p>
         </section>
       )}

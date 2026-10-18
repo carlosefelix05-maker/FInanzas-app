@@ -583,3 +583,6 @@ select.campo { appearance: none; -webkit-appearance: none; background: var(--sup
   padding: var(--esp-3);
   margin: 0;
 }
+.error-app ol { margin: 0; padding-left: 1.2em; }
+.error-app li + li { margin-top: var(--esp-1); }
+.error-app p { margin: 0; }

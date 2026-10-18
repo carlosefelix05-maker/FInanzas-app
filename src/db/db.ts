@@ -61,3 +61,22 @@ export async function solicitarPersistencia(): Promise<boolean> {
   }
   return false;
 }
+
+// Si otra pestaña abre una versión nueva de la base de datos, esta se cierra y recarga
+// para no bloquear la actualización (en iPhone las pestañas en segundo plano no responden).
+db.on('versionchange', () => {
+  db.close();
+  location.reload();
+  return false;
+});
+
+export type EstadoBD = { tipo: 'abriendo' } | { tipo: 'lista' } | { tipo: 'bloqueada' } | { tipo: 'error'; mensaje: string };
+
+/** Abre la base de datos y avisa si otra pestaña con una versión anterior la está bloqueando. */
+export function abrirBD(alCambiar: (e: EstadoBD) => void): void {
+  db.on('blocked', () => alCambiar({ tipo: 'bloqueada' }));
+  db.open().then(
+    () => alCambiar({ tipo: 'lista' }),
+    (e: Error) => alCambiar({ tipo: 'error', mensaje: `${e.name}: ${e.message}` }),
+  );
+}
