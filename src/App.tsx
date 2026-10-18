@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ChartPie, CreditCard, House, List, Plus, Settings, Target } from 'lucide-react';
 import { ProveedorAvisos } from './components/Toast';
+import { ErrorApp } from './components/ErrorApp';
 import { ProveedorCaptura, useCaptura } from './components/Captura';
 import { ScrollCtx } from './components/Scroll';
 import { Inicio } from './screens/Inicio';
@@ -48,11 +49,13 @@ const TITULOS: Record<Pantalla, string> = {
 
 export default function App() {
   return (
-    <ProveedorAvisos>
-      <ProveedorCaptura>
-        <Estructura />
-      </ProveedorCaptura>
-    </ProveedorAvisos>
+    <ErrorApp>
+      <ProveedorAvisos>
+        <ProveedorCaptura>
+          <Estructura />
+        </ProveedorCaptura>
+      </ProveedorAvisos>
+    </ErrorApp>
   );
 }
 

@@ -561,3 +561,25 @@ select.campo { appearance: none; -webkit-appearance: none; background: var(--sup
 .mini-barra-relleno { width: 100%; max-width: 24px; background: var(--gasto); border-radius: 4px 4px 0 0; opacity: 0.55; transition: opacity 0.15s; }
 .mini-barra[aria-pressed='true'] .mini-barra-relleno { opacity: 1; }
 .mini-barra-dia { font-size: var(--texto-xs); color: var(--texto-secundario); line-height: 1; border-top: 1px solid var(--borde); width: 100%; padding-top: 4px; }
+
+/* ---------- Pantalla de error ---------- */
+.error-app {
+  position: fixed;
+  inset: 0;
+  background: var(--fondo);
+  padding: calc(var(--seguro-arriba) + var(--esp-5)) var(--esp-4) calc(var(--seguro-abajo) + var(--esp-5));
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  overflow-y: auto;
+}
+.error-detalle {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 12px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-sm);
+  padding: var(--esp-3);
+  margin: 0;
+}
