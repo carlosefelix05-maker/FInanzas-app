@@ -25,6 +25,18 @@
         "--strictPort"
       ],
       "port": 4173
+    },
+    {
+      "name": "html",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4180",
+        "--directory",
+        "dist-html"
+      ],
+      "port": 4180
     }
   ]
 }
