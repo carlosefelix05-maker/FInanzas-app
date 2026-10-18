@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { Ajuste, Categoria, Cuenta, Meta, Movimiento, Msi, Presupuesto, Recurrente, Tarjeta } from '../lib/tipos';
+import type { Ajuste, Categoria, Cuenta, Meta, Movimiento, Msi, Pendiente, Presupuesto, Recurrente, Tarjeta } from '../lib/tipos';
 import { CUENTAS_INICIALES, categoriasIniciales } from './semillas';
 
 export class FinanzasDB extends Dexie {
@@ -12,6 +12,7 @@ export class FinanzasDB extends Dexie {
   msi!: EntityTable<Msi, 'id'>;
   metas!: EntityTable<Meta, 'id'>;
   ajustes!: EntityTable<Ajuste, 'clave'>;
+  pendientes!: EntityTable<Pendiente, 'id'>;
 
   constructor(nombre = 'synapfinanzas') {
     super(nombre);
@@ -25,6 +26,10 @@ export class FinanzasDB extends Dexie {
       msi: '++id, tarjetaId',
       metas: '++id',
       ajustes: 'clave',
+    });
+    this.version(2).stores({
+      recurrentes: '++id, proximaFecha',
+      pendientes: '++id, recurrenteId, fecha',
     });
     this.on('populate', async (tx) => {
       await tx.table('cuentas').bulkAdd(CUENTAS_INICIALES);

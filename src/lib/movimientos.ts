@@ -1,5 +1,5 @@
 // Cálculos puros sobre movimientos.
-import type { Categoria, Cuenta, Movimiento, TipoCategoria } from './tipos';
+import type { Aportacion, Categoria, Cuenta, Movimiento, TipoCategoria } from './tipos';
 
 export interface Totales {
   ingresos: number;
@@ -19,10 +19,14 @@ export function calcularTotales(movs: readonly Movimiento[]): Totales {
 }
 
 /**
- * Saldo actual por cuenta: saldoInicial + ingresos − gastos ± transferencias.
+ * Saldo actual por cuenta: saldoInicial + ingresos − gastos ± transferencias − aportaciones a metas.
  * En tarjetas de crédito un saldo negativo es deuda.
  */
-export function calcularSaldos(cuentas: readonly Cuenta[], movs: readonly Movimiento[]): Map<number, number> {
+export function calcularSaldos(
+  cuentas: readonly Cuenta[],
+  movs: readonly Movimiento[],
+  aportaciones: readonly Aportacion[] = [],
+): Map<number, number> {
   const saldos = new Map<number, number>();
   for (const c of cuentas) if (c.id != null) saldos.set(c.id, c.saldoInicial);
   for (const m of movs) {
@@ -32,6 +36,9 @@ export function calcularSaldos(cuentas: readonly Cuenta[], movs: readonly Movimi
     if (m.tipo === 'transferencia' && m.cuentaDestinoId != null && saldos.has(m.cuentaDestinoId)) {
       saldos.set(m.cuentaDestinoId, saldos.get(m.cuentaDestinoId)! + m.monto);
     }
+  }
+  for (const a of aportaciones) {
+    if (saldos.has(a.cuentaId)) saldos.set(a.cuentaId, saldos.get(a.cuentaId)! - a.monto);
   }
   return saldos;
 }

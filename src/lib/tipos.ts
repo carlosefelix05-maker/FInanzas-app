@@ -14,6 +14,7 @@ export interface Cuenta {
   color: string;
   archivada: boolean;
   orden: number;
+  demo?: 1;
 }
 
 export interface Categoria {
@@ -51,14 +52,28 @@ export interface Recurrente {
   plantilla: PlantillaMovimiento;
   frecuencia: Frecuencia;
   cadaNDias?: number;
+  /** Primera ocurrencia; las siguientes se calculan desde aquí para no perder el día (p. ej. 31). */
+  inicio: string;
+  /** Cuántas ocurrencias ya se generaron. */
+  generadas: number;
   proximaFecha: string;
   activo: boolean;
+  demo?: 1;
+}
+
+/** Ocurrencia de un recurrente que espera confirmación del usuario. */
+export interface Pendiente {
+  id?: number;
+  recurrenteId: number;
+  fecha: string;
+  monto: number;
 }
 
 export interface Presupuesto {
   id?: number;
   categoriaId: number;
   montoMensual: number;
+  demo?: 1;
 }
 
 export interface Tarjeta {
@@ -66,6 +81,7 @@ export interface Tarjeta {
   limite: number;
   diaCorte: number;
   diaLimitePago: number;
+  demo?: 1;
 }
 
 export interface Msi {
@@ -75,7 +91,10 @@ export interface Msi {
   montoTotal: number;
   meses: number;
   fechaPrimeraCuota: string;
+  /** Cuotas ya cargadas a la tarjeta (generadas como movimientos o previas a la app). */
   cuotasPagadas: number;
+  categoriaId: number | null;
+  demo?: 1;
 }
 
 export interface Aportacion {
@@ -90,7 +109,10 @@ export interface Meta {
   montoObjetivo: number;
   fechaObjetivo: string | null;
   color: string;
+  /** Aportaciones positivas apartan dinero de la cuenta; negativas lo regresan (retiros). */
   aportaciones: Aportacion[];
+  creada: string;
+  demo?: 1;
 }
 
 export interface Ajuste {

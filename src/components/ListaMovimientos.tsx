@@ -28,7 +28,11 @@ export function useBorrarConDeshacer() {
 }
 
 /** Lista virtualizada agrupada por día. Soporta decenas de miles de filas. */
-export function ListaMovimientos({ movimientos }: { movimientos: Movimiento[] }) {
+export function ListaMovimientos({ movimientos, sinTotalesDia }: {
+  movimientos: Movimiento[];
+  /** Oculta el total por día (cuando la lista no incluye todos los movimientos del día). */
+  sinTotalesDia?: boolean;
+}) {
   const categorias = useMapa(useCategorias());
   const cuentas = useMapa(useCuentas());
   const abrirCaptura = useCaptura();
@@ -81,7 +85,7 @@ export function ListaMovimientos({ movimientos }: { movimientos: Movimiento[] })
               {f.tipo === 'dia' ? (
                 <div className="dia-encabezado">
                   <span>{etiquetaDia(f.fecha)}</span>
-                  <span className="num">{formatearMonto(f.balance, { signo: true })}</span>
+                  {!sinTotalesDia && <span className="num">{formatearMonto(f.balance, { signo: true })}</span>}
                 </div>
               ) : (
                 <FilaMovimiento

@@ -1,12 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ArchiveRestore, ChevronDown, ChevronUp, CreditCard, Landmark, Plus, Wallet } from 'lucide-react';
 import { HojaInferior } from '../components/HojaInferior';
 import { useAviso } from '../components/Toast';
 import { Campo, CampoMonto, EncabezadoHoja, Segmentado, SelectorColor } from '../components/Formularios';
 import { bajaCuenta, guardarCuenta, moverCuenta, restaurarCuenta } from '../db/acciones';
-import { useCuentas, useMovimientos } from '../hooks/datos';
+import { useCuentas, useSaldos } from '../hooks/datos';
 import { formatearMonto } from '../lib/dinero';
-import { calcularSaldos } from '../lib/movimientos';
 import type { Cuenta, TipoCuenta } from '../lib/tipos';
 
 export const NOMBRE_TIPO_CUENTA: Record<TipoCuenta, string> = {
@@ -19,13 +18,12 @@ const ICONO_TIPO = { efectivo: Wallet, debito: Landmark, credito: CreditCard };
 
 export function Cuentas() {
   const cuentas = useCuentas();
-  const movimientos = useMovimientos();
   const avisar = useAviso();
   const [editando, setEditando] = useState<Cuenta | null>(null);
   const [ordenando, setOrdenando] = useState(false);
   const [verArchivadas, setVerArchivadas] = useState(false);
 
-  const saldos = useMemo(() => calcularSaldos(cuentas, movimientos ?? []), [cuentas, movimientos]);
+  const saldos = useSaldos() ?? new Map<number, number>();
   const activas = cuentas.filter((c) => !c.archivada);
   const archivadas = cuentas.filter((c) => c.archivada);
   const total = activas.reduce((s, c) => s + (saldos.get(c.id!) ?? 0), 0);

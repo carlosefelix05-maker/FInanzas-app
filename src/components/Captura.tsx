@@ -13,19 +13,24 @@ import { categoriasFrecuentes } from '../lib/movimientos';
 import type { Categoria, Movimiento, TipoMovimiento } from '../lib/tipos';
 import { useLiveQuery } from 'dexie-react-hooks';
 
-type Abrir = (m?: Movimiento) => void;
+export interface OpcionesCaptura {
+  /** Se llama después de guardar (p. ej. para quitar el pendiente que se editó). */
+  alGuardar?: () => void;
+}
+/** Abre la captura. Con un movimiento con id, lo edita; sin id, lo usa como borrador precargado. */
+type Abrir = (m?: Partial<Movimiento>, opciones?: OpcionesCaptura) => void;
 const Ctx = createContext<Abrir>(() => {});
 export const useCaptura = () => useContext(Ctx);
 
 export function ProveedorCaptura({ children }: { children: ReactNode }) {
-  const [estado, setEstado] = useState<{ abierta: boolean; mov?: Movimiento; clave: number }>({ abierta: false, clave: 0 });
-  const abrir = useCallback<Abrir>((mov) => setEstado((e) => ({ abierta: true, mov, clave: e.clave + 1 })), []);
+  const [estado, setEstado] = useState<{ abierta: boolean; mov?: Partial<Movimiento>; opciones?: OpcionesCaptura; clave: number }>({ abierta: false, clave: 0 });
+  const abrir = useCallback<Abrir>((mov, opciones) => setEstado((e) => ({ abierta: true, mov, opciones, clave: e.clave + 1 })), []);
   const cerrar = useCallback(() => setEstado((e) => ({ ...e, abierta: false })), []);
   return (
     <Ctx.Provider value={abrir}>
       {children}
-      <HojaInferior abierta={estado.abierta} alCerrar={cerrar} etiqueta={estado.mov ? 'Editar movimiento' : 'Nuevo movimiento'}>
-        <FormularioCaptura key={estado.clave} inicial={estado.mov} alCerrar={cerrar} />
+      <HojaInferior abierta={estado.abierta} alCerrar={cerrar} etiqueta={estado.mov?.id != null ? 'Editar movimiento' : 'Nuevo movimiento'}>
+        <FormularioCaptura key={estado.clave} inicial={estado.mov} opciones={estado.opciones} alCerrar={cerrar} />
       </HojaInferior>
     </Ctx.Provider>
   );
@@ -39,7 +44,8 @@ const TIPOS: { valor: TipoMovimiento; etiqueta: string }[] = [
 
 const NOMBRE_TIPO: Record<TipoMovimiento, string> = { gasto: 'Gasto', ingreso: 'Ingreso', transferencia: 'Transferencia' };
 
-function FormularioCaptura({ inicial, alCerrar }: { inicial?: Movimiento; alCerrar: () => void }) {
+function FormularioCaptura({ inicial, opciones, alCerrar }: { inicial?: Partial<Movimiento>; opciones?: OpcionesCaptura; alCerrar: () => void }) {
+  const editando = inicial?.id != null;
   const avisar = useAviso();
   const cuentas = useCuentas();
   const categorias = useCategorias();
@@ -47,7 +53,7 @@ function FormularioCaptura({ inicial, alCerrar }: { inicial?: Movimiento; alCerr
   const usos = useLiveQuery(() => db.movimientos.orderBy('fecha').reverse().limit(1000).toArray(), [], []);
 
   const [tipo, setTipo] = useState<TipoMovimiento>(inicial?.tipo ?? 'gasto');
-  const [texto, setTexto] = useState(inicial ? centavosATexto(inicial.monto) : '');
+  const [texto, setTexto] = useState(inicial?.monto ? centavosATexto(inicial.monto) : '');
   const [categoriaId, setCategoriaId] = useState<number | null>(inicial?.categoriaId ?? null);
   const [cuentaId, setCuentaId] = useState<number | null>(inicial?.cuentaId ?? null);
   const [destinoId, setDestinoId] = useState<number | null>(inicial?.cuentaDestinoId ?? null);
@@ -97,7 +103,10 @@ function FormularioCaptura({ inicial, alCerrar }: { inicial?: Movimiento; alCerr
   const guardar = async () => {
     if (!valido) return;
     const m: Movimiento = {
-      ...(inicial ?? { recurrenteId: null, msiId: null, creado: Date.now() }),
+      recurrenteId: null,
+      msiId: null,
+      ...inicial,
+      creado: inicial?.creado ?? Date.now(),
       tipo,
       monto,
       fecha,
@@ -107,7 +116,8 @@ function FormularioCaptura({ inicial, alCerrar }: { inicial?: Movimiento; alCerr
       nota: nota.trim(),
     };
     await guardarMovimiento(m);
-    avisar(inicial ? 'Movimiento actualizado' : `${NOMBRE_TIPO[tipo]} registrado`);
+    await opciones?.alGuardar?.();
+    avisar(editando ? 'Movimiento actualizado' : `${NOMBRE_TIPO[tipo]} registrado`);
     alCerrar();
   };
 
@@ -138,7 +148,7 @@ function FormularioCaptura({ inicial, alCerrar }: { inicial?: Movimiento; alCerr
             </button>
           ))}
         </div>
-        {inicial && (
+        {editando && (
           <button className="btn-icono" aria-label="Eliminar movimiento" onClick={borrar} style={{ color: 'var(--gasto)' }}>
             <Trash2 size={20} />
           </button>
@@ -241,7 +251,7 @@ function FormularioCaptura({ inicial, alCerrar }: { inicial?: Movimiento; alCerr
       <Teclado alTeclear={teclear} />
 
       <button className="btn btn-primario btn-bloque btn-guardar" disabled={!valido} onClick={guardar}>
-        {inicial ? 'Guardar cambios' : 'Guardar'}
+        {editando ? 'Guardar cambios' : 'Guardar'}
       </button>
     </div>
   );

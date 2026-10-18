@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ChartPie, CreditCard, House, List, Plus, Settings, Target } from 'lucide-react';
 import { ProveedorAvisos } from './components/Toast';
 import { ProveedorCaptura, useCaptura } from './components/Captura';
@@ -6,9 +6,15 @@ import { ScrollCtx } from './components/Scroll';
 import { Inicio } from './screens/Inicio';
 import { Movimientos } from './screens/Movimientos';
 import { Ajustes } from './screens/Ajustes';
-import { Proximamente } from './screens/Proximamente';
 import { Categorias } from './screens/Categorias';
 import { Cuentas } from './screens/Cuentas';
+import { Recurrentes } from './screens/Recurrentes';
+import { Presupuestos } from './screens/Presupuestos';
+import { Tarjetas } from './screens/Tarjetas';
+import { Metas } from './screens/Metas';
+// Análisis carga Recharts; se separa para que la app abra más rápido.
+const Analisis = lazy(() => import('./screens/Analisis').then((m) => ({ default: m.Analisis })));
+import { procesarAutomaticos } from './db/automaticos';
 
 const TABS = [
   { id: 'inicio', etiqueta: 'Inicio', Icono: House },
@@ -18,8 +24,8 @@ const TABS = [
   { id: 'metas', etiqueta: 'Metas', Icono: Target },
 ] as const;
 
-export type Pantalla = (typeof TABS)[number]['id'] | 'ajustes' | 'categorias' | 'cuentas';
-const SECUNDARIAS: Pantalla[] = ['ajustes', 'categorias', 'cuentas'];
+export type Pantalla = (typeof TABS)[number]['id'] | 'ajustes' | 'categorias' | 'cuentas' | 'recurrentes' | 'presupuestos';
+const SECUNDARIAS: Pantalla[] = ['ajustes', 'categorias', 'cuentas', 'recurrentes', 'presupuestos'];
 const PANTALLAS: Pantalla[] = [...TABS.map((t) => t.id), ...SECUNDARIAS];
 
 function leerHash(): Pantalla {
@@ -36,6 +42,8 @@ const TITULOS: Record<Pantalla, string> = {
   ajustes: 'Ajustes',
   categorias: 'Categorías',
   cuentas: 'Cuentas',
+  recurrentes: 'Recurrentes',
+  presupuestos: 'Presupuestos',
 };
 
 export default function App() {
@@ -62,6 +70,15 @@ function Estructura() {
   useEffect(() => {
     scrollRef.current?.scrollTo(0, 0);
   }, [pantalla]);
+
+  // Recurrentes vencidos y cuotas MSI: al abrir la app y al volver a ella (puede haber cambiado el día).
+  useEffect(() => {
+    const procesar = () => procesarAutomaticos().catch((e) => console.error('Automáticos', e));
+    procesar();
+    const alVolver = () => document.visibilityState === 'visible' && procesar();
+    document.addEventListener('visibilitychange', alVolver);
+    return () => document.removeEventListener('visibilitychange', alVolver);
+  }, []);
 
   const irA = useCallback((p: Pantalla) => {
     if (p === leerHash()) {
@@ -97,12 +114,14 @@ function Estructura() {
         <main className="contenido" ref={scrollRef}>
           {pantalla === 'inicio' && <Inicio irA={irA} />}
           {pantalla === 'movimientos' && <Movimientos />}
-          {pantalla === 'analisis' && <Proximamente Icono={ChartPie} texto="Gráficas y análisis" fase={6} />}
-          {pantalla === 'tarjetas' && <Proximamente Icono={CreditCard} texto="Tarjetas de crédito y MSI" fase={4} />}
-          {pantalla === 'metas' && <Proximamente Icono={Target} texto="Metas de ahorro" fase={5} />}
+          {pantalla === 'analisis' && <Suspense fallback={null}><Analisis /></Suspense>}
+          {pantalla === 'tarjetas' && <Tarjetas />}
+          {pantalla === 'metas' && <Metas />}
           {pantalla === 'ajustes' && <Ajustes irA={irA} />}
           {pantalla === 'categorias' && <Categorias />}
           {pantalla === 'cuentas' && <Cuentas />}
+          {pantalla === 'recurrentes' && <Recurrentes />}
+          {pantalla === 'presupuestos' && <Presupuestos />}
         </main>
       </ScrollCtx.Provider>
 

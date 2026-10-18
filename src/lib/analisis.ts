@@ -1,7 +1,7 @@
 // Filtros y comparativas por categoría (funciones puras).
 import type { Categoria, Cuenta, Movimiento, TipoCategoria } from './tipos';
-import { deISO, type TipoPeriodo } from './fechas';
-import { format } from 'date-fns';
+import { aISO, deISO, sumarDias, type TipoPeriodo } from './fechas';
+import { addMonths, format, getDaysInMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export interface Filtros {
@@ -135,4 +135,142 @@ export function nombrePeriodoAnterior(tipo: TipoPeriodo, inicioAnterior: string)
     case 'anio':
       return format(d, 'yyyy');
   }
+}
+
+// ---------- Series y métricas de la pantalla Análisis ----------
+
+export interface PuntoMensual {
+  mes: string; // 'YYYY-MM'
+  etiqueta: string; // 'oct'
+  ingresos: number;
+  gastos: number;
+  balance: number;
+  /** (ingresos − gastos) / ingresos en %, null si no hubo ingresos. */
+  tasaAhorro: number | null;
+}
+
+/** Últimos `n` meses terminando en el mes de `hoy`. */
+export function serieMensual(movs: readonly Movimiento[], hoy: string, n = 12): PuntoMensual[] {
+  const base = deISO(hoy);
+  const meses: PuntoMensual[] = [];
+  const indice = new Map<string, PuntoMensual>();
+  for (let i = n - 1; i >= 0; i--) {
+    const d = addMonths(new Date(base.getFullYear(), base.getMonth(), 1), -i);
+    const mes = aISO(d).slice(0, 7);
+    const p = { mes, etiqueta: format(d, 'MMM', { locale: es }).replace('.', ''), ingresos: 0, gastos: 0, balance: 0, tasaAhorro: null };
+    meses.push(p);
+    indice.set(mes, p);
+  }
+  for (const m of movs) {
+    const p = indice.get(m.fecha.slice(0, 7));
+    if (!p || m.fecha > hoy) continue;
+    if (m.tipo === 'ingreso') p.ingresos += m.monto;
+    else if (m.tipo === 'gasto') p.gastos += m.monto;
+  }
+  for (const p of meses) {
+    p.balance = p.ingresos - p.gastos;
+    p.tasaAhorro = tasaAhorro(p.ingresos, p.gastos);
+  }
+  return meses;
+}
+
+export function tasaAhorro(ingresos: number, gastos: number): number | null {
+  if (ingresos <= 0) return null;
+  return Math.round(((ingresos - gastos) / ingresos) * 1000) / 10;
+}
+
+/** Tendencia: tasa del último mes completo vs. promedio de los 3 anteriores. */
+export function tendenciaTasa(serie: readonly PuntoMensual[]): { actual: number | null; promedioPrevio: number | null } {
+  const completos = serie.slice(0, -1); // el último mes está en curso
+  const actual = completos.at(-1)?.tasaAhorro ?? null;
+  const previos = completos.slice(-4, -1).map((p) => p.tasaAhorro).filter((t): t is number => t != null);
+  const promedioPrevio = previos.length ? Math.round((previos.reduce((s, t) => s + t, 0) / previos.length) * 10) / 10 : null;
+  return { actual, promedioPrevio };
+}
+
+export function topGastos(movs: readonly Movimiento[], n = 5): Movimiento[] {
+  return movs.filter((m) => m.tipo === 'gasto').sort((a, b) => b.monto - a.monto).slice(0, n);
+}
+
+export interface ConfigHormiga {
+  /** Monto máximo por movimiento para considerarlo "hormiga" (centavos). */
+  umbral: number;
+  /** Mínimo de movimientos pequeños en la categoría. */
+  minimoMovimientos: number;
+  /** % mínimo del gasto total del periodo que deben sumar. */
+  porcentajeMinimo: number;
+}
+
+export const AJUSTE_HORMIGA = 'hormiga';
+
+export const HORMIGA_PREDETERMINADO: ConfigHormiga = { umbral: 15000, minimoMovimientos: 5, porcentajeMinimo: 5 };
+
+export interface GastoHormiga {
+  categoriaId: number;
+  cantidad: number;
+  total: number;
+  porcentaje: number;
+}
+
+export function gastosHormiga(
+  movs: readonly Movimiento[],
+  categorias: readonly Categoria[],
+  config: ConfigHormiga = HORMIGA_PREDETERMINADO,
+): GastoHormiga[] {
+  const porId = new Map(categorias.map((c) => [c.id!, c]));
+  const totalGastos = movs.reduce((s, m) => s + (m.tipo === 'gasto' ? m.monto : 0), 0);
+  if (totalGastos === 0) return [];
+  const acc = new Map<number, { cantidad: number; total: number }>();
+  for (const m of movs) {
+    if (m.tipo !== 'gasto' || m.categoriaId == null || m.monto >= config.umbral) continue;
+    const id = categoriaRaiz(porId, m.categoriaId);
+    const a = acc.get(id) ?? { cantidad: 0, total: 0 };
+    a.cantidad++;
+    a.total += m.monto;
+    acc.set(id, a);
+  }
+  return [...acc.entries()]
+    .map(([categoriaId, a]) => ({ categoriaId, ...a, porcentaje: Math.round((a.total / totalGastos) * 1000) / 10 }))
+    .filter((h) => h.cantidad >= config.minimoMovimientos && h.porcentaje >= config.porcentajeMinimo)
+    .sort((a, b) => b.total - a.total);
+}
+
+export interface Proyeccion {
+  gastado: number;
+  diasTranscurridos: number;
+  diasMes: number;
+  ritmoDiario: number;
+  proyectado: number;
+  presupuesto: number;
+  /** proyectado − presupuesto (positivo = se pasaría). */
+  diferencia: number;
+}
+
+/** Gasto proyectado a fin de mes según el ritmo diario actual. */
+export function proyeccionFinDeMes(movsDelMes: readonly Movimiento[], hoy: string, presupuestoTotal: number): Proyeccion {
+  const d = deISO(hoy);
+  const diasMes = getDaysInMonth(d);
+  const diasTranscurridos = d.getDate();
+  const gastado = movsDelMes.reduce((s, m) => s + (m.tipo === 'gasto' && m.fecha <= hoy ? m.monto : 0), 0);
+  const ritmoDiario = Math.round(gastado / diasTranscurridos);
+  const proyectado = Math.round((gastado / diasTranscurridos) * diasMes);
+  return { gastado, diasTranscurridos, diasMes, ritmoDiario, proyectado, presupuesto: presupuestoTotal, diferencia: proyectado - presupuestoTotal };
+}
+
+/** Gasto por día de los últimos `n` días (incluye hoy). */
+export function gastoPorDia(movs: readonly Movimiento[], hoy: string, n = 7): { fecha: string; etiqueta: string; gasto: number }[] {
+  const out = [];
+  const indice = new Map<string, { fecha: string; etiqueta: string; gasto: number }>();
+  for (let i = n - 1; i >= 0; i--) {
+    const fecha = sumarDias(hoy, -i);
+    const p = { fecha, etiqueta: format(deISO(fecha), 'EEEEE', { locale: es }).toUpperCase(), gasto: 0 };
+    out.push(p);
+    indice.set(fecha, p);
+  }
+  for (const m of movs) {
+    if (m.tipo !== 'gasto') continue;
+    const p = indice.get(m.fecha);
+    if (p) p.gasto += m.monto;
+  }
+  return out;
 }
