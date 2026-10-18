@@ -17,7 +17,8 @@ html {
 
 body {
   margin: 0;
-  background: var(--fondo);
+  /* Azul detrás de todo: si iOS deja algún hueco, se funde con header y navegación */
+  background: var(--azul);
   color: var(--texto);
   font-family: var(--fuente-cuerpo);
   font-size: var(--texto-md);
@@ -74,13 +75,18 @@ button {
 
 /* ---------- Estructura ---------- */
 .app {
-  height: 100%;
+  /* Fijo a los 4 bordes: en iOS instalado, height:100% queda corto
+     por la altura de la barra de estado (status bar translúcida). */
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   flex-direction: column;
   max-width: var(--ancho-max);
   margin: 0 auto;
   background: var(--fondo);
-  position: relative;
 }
 
 .header {

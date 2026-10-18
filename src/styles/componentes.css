@@ -276,8 +276,9 @@
 }
 .fila-mov-monto { font-weight: 700; white-space: nowrap; }
 
-.tarjeta .lista-mov .dia-encabezado { padding-left: 0; }
+.tarjeta .lista-mov .dia-encabezado { padding-left: 0; padding-right: 0; }
 .tarjeta .lista-mov .fila-mov { padding-left: 0; padding-right: 0; }
+.tarjeta .lista-mov > div:last-child .fila-mov { border-bottom: 0; }
 
 .buscador {
   display: flex;
