@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Props {
   abierta: boolean;
@@ -7,7 +8,11 @@ interface Props {
   children: ReactNode;
 }
 
-/** Hoja inferior modal (bottom sheet). */
+/**
+ * Hoja inferior modal (bottom sheet).
+ * Se monta en <body> con un portal: dentro del área con scroll, iOS Safari puede recortar
+ * los elementos fijos y dejar el botón Guardar detrás de la barra de navegación.
+ */
 export function HojaInferior({ abierta, alCerrar, etiqueta, children }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -24,7 +29,7 @@ export function HojaInferior({ abierta, alCerrar, etiqueta, children }: Props) {
   }, [abierta, alCerrar]);
 
   if (!abierta) return null;
-  return (
+  return createPortal(
     <div className="hoja-fondo" onClick={alCerrar}>
       <div
         className="hoja"
@@ -38,6 +43,7 @@ export function HojaInferior({ abierta, alCerrar, etiqueta, children }: Props) {
         <div className="hoja-asa" aria-hidden="true" />
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

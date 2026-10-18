@@ -3,7 +3,7 @@
   position: fixed;
   inset: 0;
   background: rgba(20, 32, 46, 0.45);
-  z-index: 50;
+  z-index: 100;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -327,7 +327,7 @@
   display: flex;
   justify-content: center;
   pointer-events: none;
-  z-index: 60;
+  z-index: 110;
   padding: 0 var(--esp-4);
 }
 .toast {
