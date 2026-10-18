@@ -1,0 +1,49 @@
+/* Sistema de diseño "Edu" */
+:root {
+  /* Color */
+  --azul: #1a3a5c;
+  --azul-hover: #142e49;
+  --azul-suave: #e8eef4;
+  --texto: #2c3e50;
+  --texto-secundario: #5d6d7e;
+  --texto-terciario: #7b8a99;
+  --fondo: #f8f9fa;
+  --superficie: #ffffff;
+  --borde: #e3e7eb;
+  --naranja: #e67e22;
+  --naranja-texto: #a3540f; /* naranja con contraste AA sobre blanco */
+  --naranja-suave: #fdf1e6;
+  --ingreso: #2e7d5b;
+  --gasto: #b03a2e;
+  --gasto-suave: #f8e9e7;
+
+  /* Tipografía */
+  --fuente-titulos: Cambria, Caladea, Georgia, serif;
+  --fuente-cuerpo: Calibri, Carlito, -apple-system, 'Segoe UI', sans-serif;
+  --texto-xs: 0.8125rem;
+  --texto-sm: 0.9375rem;
+  --texto-md: 1.0625rem;
+  --texto-lg: 1.25rem;
+  --texto-xl: 1.625rem;
+  --texto-xxl: 2.5rem;
+
+  /* Forma y espacio */
+  --radio: 12px;
+  --radio-sm: 8px;
+  --radio-pill: 999px;
+  --sombra: 0 1px 2px rgba(26, 58, 92, 0.06), 0 2px 8px rgba(26, 58, 92, 0.06);
+  --sombra-alta: 0 -4px 24px rgba(26, 58, 92, 0.16);
+  --esp-1: 4px;
+  --esp-2: 8px;
+  --esp-3: 12px;
+  --esp-4: 16px;
+  --esp-5: 24px;
+  --toque: 44px;
+
+  /* Estructura */
+  --alto-header: 56px;
+  --alto-nav: 60px;
+  --seguro-arriba: env(safe-area-inset-top, 0px);
+  --seguro-abajo: env(safe-area-inset-bottom, 0px);
+  --ancho-max: 480px;
+}
